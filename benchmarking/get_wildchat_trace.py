@@ -211,6 +211,7 @@ def save_trace(trace: Trace, output_path: str):
     trace (Trace): The trace to save.
     output_path (str): The path where the JSON file will be saved.
     """
+    os.makedirs("./traces", exist_ok=True)
     # Convert the Trace instance to a dictionary
     trace_dict = asdict(trace)
     
@@ -223,9 +224,9 @@ def save_trace(trace: Trace, output_path: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build WildChat trace")
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-70B-Instruct", help="Model name")
-    parser.add_argument("-m", "--max-length", type=int, default=5000, help="Maximum prompt + response length")
-    parser.add_argument("-n", "--num_entries", type=int, default=250, help="Number of entries")
-    parser.add_argument("-s", "--seed", type=int, default=12345, help="Random seed")
+    parser.add_argument("-m", "--max-length", type=int, default=8192, help="Maximum prompt + response length")
+    parser.add_argument("-n", "--num_entries", type=int, default=125, help="Number of entries")
+    parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")
     parser.add_argument("-o", "--output_file", type=str, default="./traces/wildchat.json", help="Output file name")
     parser.add_argument("-t", "--trace-type", type=str, choices=["offline", "poisson", "splitwise"], default="offline", help="Arrival Times Trace Type")
     parser.add_argument("-a", "--arrival-rate", type=float, default=0.0, help="Arrival Rate")
