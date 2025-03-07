@@ -40,7 +40,7 @@ max_tokens_per_batch_values=(
     128
 )
 
-mkdir -p $OUTPUT_FOLDER/out
+mkdir -p $OUTPUT_FOLDER/output
 mkdir -p $OUTPUT_FOLDER/logs
 mkdir -p $OUTPUT_FOLDER/profiling 
 
