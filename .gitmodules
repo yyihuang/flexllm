@@ -1,0 +1,3 @@
+[submodule "flexflow-serve"]
+	path = flexflow-serve
+	url = git@github.com:flexflow/flexflow-serve.git
