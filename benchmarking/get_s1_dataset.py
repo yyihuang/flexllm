@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
-import json, argparse
+import json, argparse, os
 
 def main(model_name, max_length, output_file):
     # Load a sample dataset; adjust the dataset name and split as needed.
@@ -36,5 +36,10 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--max-length", type=int, default=8192, help="Max dataset size")
     parser.add_argument("-o", "--output_file", type=str, default="./traces/s1.json", help="Output file name")
     args = parser.parse_args()
+
+    # Change directory to that holding this script
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    os.makedirs("./traces", exist_ok=True)
 
     main(args.model_name, args.max_length, args.output_file)

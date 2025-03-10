@@ -5,8 +5,8 @@ set -e
 cd "${BASH_SOURCE[0]%/*}/../flexflow-serve/build"
 
 reset
-# make -j 
-source ./set_python_envs.sh
+make -j install
+# source ./set_python_envs.sh
 
 # MODEL_NAME="meta-llama/Llama-3.1-70B-Instruct"
 # PEFT_MODEL_NAME="goliaro/llama3.1-70b-lora"
@@ -19,8 +19,8 @@ MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
 PEFT_MODEL_NAME="goliaro/llama-3.1-8b-s1"
 NGPUS=4
 NCPUS=16
-FSIZE=30000
-ZSIZE=50000
+FSIZE=36000
+ZSIZE=70000
 
 OUTPUT_FOLDER="../../benchmarking/output/peft"
 TRACES_FOLDER="../../benchmarking/traces"
@@ -38,7 +38,7 @@ batch_sizes=(
 
 trace_files=(
     sharegpt
-    wildchat
+    # wildchat
 )
 
 max_tokens_per_batch_values=(
@@ -76,6 +76,7 @@ for j in "${!max_tokens_per_batch_values[@]}"; do
         -ll:fsize $FSIZE -ll:zsize $ZSIZE \
         -llm-model $MODEL_NAME --fusion \
         -tensor-parallelism-degree $NGPUS \
+        --log-instance-creation \
         -enable-peft -peft-model $PEFT_MODEL_NAME \
         -finetuning-dataset $FINETUNING_DATASET \
         -prompt $TRACE_FILE \

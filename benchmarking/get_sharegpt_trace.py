@@ -29,6 +29,7 @@ class TraceMetadata:
     max_response_length: int
     min_response_length: int
     avg_response_length: float
+    avg_total_length: int
     max_total_length: int
     trace_type: str
     arrival_rate: float
@@ -36,7 +37,7 @@ class TraceMetadata:
 @dataclass
 class Trace:
     entries: List[TraceEntry] = field(default_factory=list)
-    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
+    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
 
 def generate_arrival_rates_splitwise(n, target_arrival_rate_sec, seed):
     def get_splitwise_trace(trace_type="conv"):
@@ -209,6 +210,7 @@ def build_trace(model_name: str,
         max_response_length=0,
         min_response_length=float("inf"),
         avg_response_length=0,
+        avg_total_length=0,
         max_total_length=0,
         trace_type=trace_type,
         arrival_rate=arrival_rate
@@ -247,9 +249,11 @@ def build_trace(model_name: str,
         trace_metadata.max_response_length = max(trace_metadata.max_response_length, response_length)
         trace_metadata.min_response_length = min(trace_metadata.min_response_length, response_length)
         trace_metadata.avg_response_length += response_length
+        trace_metadata.avg_total_length += prompt_length + response_length
         trace_metadata.max_total_length = max(trace_metadata.max_total_length, prompt_length + response_length)
     trace_metadata.avg_prompt_length /= len(trace.entries)
     trace_metadata.avg_response_length /= len(trace.entries)
+    trace_metadata.avg_total_length /= len(trace.entries)
     trace_metadata.avg_entries_per_partition = len(trace.entries)
     trace_metadata.arrival_rate = arrival_rate
 
