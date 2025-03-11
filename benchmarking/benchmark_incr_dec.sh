@@ -4,7 +4,7 @@ set -e
 # Cd into directory holding this script
 cd "${BASH_SOURCE[0]%/*}/../flexflow-serve/build"
 
-reset
+# reset
 # make -j 
 source ./set_python_envs.sh
 
