@@ -1,3 +1,6 @@
 [submodule "flexflow-serve"]
 	path = flexflow-serve
 	url = git@github.com:flexflow/flexflow-serve.git
+[submodule "vllm"]
+	path = vllm
+	url = git@github.com:vllm-project/vllm.git

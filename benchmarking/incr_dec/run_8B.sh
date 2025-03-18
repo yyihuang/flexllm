@@ -2,23 +2,24 @@ set -x
 set -e
 
 # Cd into directory holding this script
-cd "${BASH_SOURCE[0]%/*}/../flexflow-serve/build"
+cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 
 # reset
 # make -j 
 source ./set_python_envs.sh
 
-MODEL_NAME="meta-llama/Llama-3.1-70B-Instruct"
-NGPUS=4
+MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
+NGPUS=1
 NCPUS=16
 FSIZE=76000
-ZSIZE=200000
+ZSIZE=40000
 
-OUTPUT_FOLDER="../../benchmarking/output/incr_decoding"
+OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/8B"
 TRACES_FOLDER="../../benchmarking/traces"
 MAX_SEQ_LEN=8192
-NUM_KV_CACHE_SLOTS=$((MAX_SEQ_LEN * 4))
+NUM_KV_CACHE_SLOTS=400000
 batch_sizes=(
+    256
     128
     64
     32
@@ -44,9 +45,9 @@ mkdir -p $OUTPUT_FOLDER/output
 mkdir -p $OUTPUT_FOLDER/logs
 mkdir -p $OUTPUT_FOLDER/profiling 
 
-python -c "from huggingface_hub import snapshot_download; \
-    snapshot_download(repo_id=\"${MODEL_NAME}\", allow_patterns=\"*.safetensors\", max_workers=30)"
-python ../inference/utils/download_hf_model.py --half-precision-only $MODEL_NAME
+# python -c "from huggingface_hub import snapshot_download; \
+#     snapshot_download(repo_id=\"${MODEL_NAME}\", allow_patterns=\"*.safetensors\", max_workers=30)"
+# python ../inference/utils/download_hf_model.py --half-precision-only $MODEL_NAME
 
 for i in "${!trace_files[@]}"; do
 for k in "${!batch_sizes[@]}"; do
@@ -58,8 +59,8 @@ for j in "${!max_tokens_per_batch_values[@]}"; do
     BATCH_SIZE=${batch_sizes[$k]}
     echo "Running $TRACE_FILE with BZ=$BATCH_SIZE, TOKENS_PER_BATCH=$MAX_TOKENS_PER_BATCH, KV_CACHE_SLOTS=$NUM_KV_CACHE_SLOTS"
 
-    OUTPUT_FILE="${OUTPUT_FOLDER}/output/${trace_files[$i]}_bz_${MAX_TOKENS_PER_BATCH}_tokens_per_batch_${MAX_TOKENS_PER_BATCH}_kv_cache_slots_${NUM_KV_CACHE_SLOTS}.json"
-    LOG_FILE="${OUTPUT_FOLDER}/logs/${trace_files[$i]}_bz_${MAX_TOKENS_PER_BATCH}_tokens_per_batch_${MAX_TOKENS_PER_BATCH}_kv_cache_slots_${NUM_KV_CACHE_SLOTS}.out"
+    OUTPUT_FILE="${OUTPUT_FOLDER}/output/${trace_files[$i]}_bz_${BATCH_SIZE}_tokens_per_batch_${MAX_TOKENS_PER_BATCH}_kv_cache_slots_${NUM_KV_CACHE_SLOTS}.json"
+    LOG_FILE="${OUTPUT_FOLDER}/logs/${trace_files[$i]}_bz_${BATCH_SIZE}_tokens_per_batch_${MAX_TOKENS_PER_BATCH}_kv_cache_slots_${NUM_KV_CACHE_SLOTS}.out"
     rm $OUTPUT_FILE $LOG_FILE || true
     
     time ./inference/incr_decoding/incr_decoding \
@@ -78,4 +79,3 @@ for j in "${!max_tokens_per_batch_values[@]}"; do
 done
 done
 done
-
