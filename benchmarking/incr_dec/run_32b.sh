@@ -8,14 +8,14 @@ cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 # make -j 
 source ./set_python_envs.sh
 
-MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
-NGPUS=1
+MODEL_NAME="Qwen/Qwen2.5-32B"
+NGPUS=2
 NCPUS=16
-FSIZE=76000
-ZSIZE=40000
+FSIZE=78000
+ZSIZE=100000
 CSIZE=2048
 
-OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/8B"
+OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/32B"
 TRACES_FOLDER="../../benchmarking/traces"
 MAX_SEQ_LEN=8192
 NUM_KV_CACHE_SLOTS=240000

@@ -31,13 +31,14 @@ class TraceMetadata:
     avg_response_length: float
     avg_total_length: int
     max_total_length: int
+    total_tokens: int
     trace_type: str
     arrival_rate: float
 
 @dataclass
 class Trace:
     entries: List[TraceEntry] = field(default_factory=list)
-    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
+    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
 
 def generate_arrival_rates_splitwise(n, target_arrival_rate_sec, seed):
     def get_splitwise_trace(trace_type="conv"):
@@ -176,6 +177,7 @@ def build_trace(model_name: str,
                 num_entries: int, 
                 max_length: int, 
                 seed: int, 
+                no_prompt: bool = False,
                 trace_type: str = "offline",
                 arrival_rate: float = 0.0,
                 apply_chat_template: bool = False):
@@ -212,6 +214,7 @@ def build_trace(model_name: str,
         avg_response_length=0,
         avg_total_length=0,
         max_total_length=0,
+        total_tokens=0,
         trace_type=trace_type,
         arrival_rate=arrival_rate
     )
@@ -227,7 +230,7 @@ def build_trace(model_name: str,
     for i in tqdm(range(len(dataset))):
         if len(trace.entries) == num_entries:
             break
-
+        
         # Tokenize the prompts and completions.
         prompt = dataset[i][0]
         if apply_chat_template:
@@ -236,6 +239,8 @@ def build_trace(model_name: str,
                 add_generation_prompt=True,
                 tokenize=False,
             )
+        if no_prompt:
+            prompt = ""
         response = dataset[i][1]
         prompt_length = len(tokenizer(prompt)["input_ids"])
         response_length = len(tokenizer(response)["input_ids"])
@@ -251,6 +256,7 @@ def build_trace(model_name: str,
         trace_metadata.avg_response_length += response_length
         trace_metadata.avg_total_length += prompt_length + response_length
         trace_metadata.max_total_length = max(trace_metadata.max_total_length, prompt_length + response_length)
+        trace_metadata.total_tokens += prompt_length + response_length
     trace_metadata.avg_prompt_length /= len(trace.entries)
     trace_metadata.avg_response_length /= len(trace.entries)
     trace_metadata.avg_total_length /= len(trace.entries)
@@ -288,6 +294,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output_file", type=str, default="./traces/sharegpt.json", help="Output file name")
     parser.add_argument("-t", "--trace-type", type=str, choices=["offline", "poisson", "splitwise"], default="offline", help="Arrival Times Trace Type")
     parser.add_argument("-a", "--arrival-rate", type=float, default=0.0, help="Arrival Rate")
+    parser.add_argument("--no-prompt", action="store_true", help="Disable prompt")
     args = parser.parse_args()
 
     # Change directory to that holding this script
@@ -297,6 +304,7 @@ if __name__ == "__main__":
                         args.num_entries, 
                         args.max_length, 
                         args.seed,
+                        args.no_prompt,
                         trace_type=args.trace_type,
                         arrival_rate=args.arrival_rate,
                         apply_chat_template=False)

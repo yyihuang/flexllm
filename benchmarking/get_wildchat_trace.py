@@ -29,13 +29,14 @@ class TraceMetadata:
     min_response_length: int
     avg_response_length: float
     max_total_length: int
+    total_tokens: int
     trace_type: str
     arrival_rate: float
 
 @dataclass
 class Trace:
     entries: List[TraceEntry] = field(default_factory=list)
-    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
+    metadata: TraceMetadata = field(default_factory=lambda: TraceMetadata(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "offline", 0.0))
 
 def generate_arrival_rates_splitwise(n, target_arrival_rate_sec, seed):
     def get_splitwise_trace(trace_type="conv"):
@@ -123,6 +124,7 @@ def build_trace(dataset: datasets.Dataset,
                 num_entries: int, 
                 max_length: int, 
                 seed: int, 
+                no_prompt: bool = False,
                 trace_type: str = "offline",
                 arrival_rate: float = 0.0,
                 apply_chat_template: bool = False):
@@ -161,6 +163,7 @@ def build_trace(dataset: datasets.Dataset,
         min_response_length=float("inf"),
         avg_response_length=0,
         max_total_length=0,
+        total_tokens=0,
         trace_type=trace_type,
         arrival_rate=arrival_rate
     )
@@ -179,6 +182,8 @@ def build_trace(dataset: datasets.Dataset,
                 add_generation_prompt=True,
                 tokenize=False,
             )
+        if no_prompt:
+            prompt = ""
         prompt_length = len(tokenizer(prompt)["input_ids"])
         response_length = len(tokenizer(response)["input_ids"])
         if prompt_length + response_length > max_length:
@@ -192,6 +197,7 @@ def build_trace(dataset: datasets.Dataset,
         trace_metadata.min_response_length = min(trace_metadata.min_response_length, response_length)
         trace_metadata.avg_response_length += response_length
         trace_metadata.max_total_length = max(trace_metadata.max_total_length, prompt_length + response_length)
+        trace_metadata.total_tokens += prompt_length + response_length
         if len(trace.entries) == num_entries:
             break
     trace_metadata.avg_prompt_length /= len(trace.entries)
@@ -224,12 +230,13 @@ def save_trace(trace: Trace, output_path: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build WildChat trace")
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-70B-Instruct", help="Model name")
-    parser.add_argument("-m", "--max-length", type=int, default=2048, help="Maximum prompt + response length")
-    parser.add_argument("-n", "--num_entries", type=int, default=125, help="Number of entries")
+    parser.add_argument("-m", "--max-length", type=int, default=8192, help="Maximum prompt + response length")
+    parser.add_argument("-n", "--num_entries", type=int, default=200, help="Number of entries")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")
     parser.add_argument("-o", "--output_file", type=str, default="./traces/wildchat.json", help="Output file name")
     parser.add_argument("-t", "--trace-type", type=str, choices=["offline", "poisson", "splitwise"], default="offline", help="Arrival Times Trace Type")
     parser.add_argument("-a", "--arrival-rate", type=float, default=0.0, help="Arrival Rate")
+    parser.add_argument("--no-prompt", action="store_true", help="Disable prompt")
     args = parser.parse_args()
 
     # Change directory to that holding this script
@@ -241,6 +248,7 @@ if __name__ == "__main__":
                         args.num_entries, 
                         args.max_length, 
                         args.seed,
+                        args.no_prompt,
                         trace_type=args.trace_type,
                         arrival_rate=args.arrival_rate,
                         apply_chat_template=False)

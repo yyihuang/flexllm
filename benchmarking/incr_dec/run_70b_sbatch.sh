@@ -4,11 +4,11 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-task=4
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=200G
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=0
 #SBATCH --constraint gpu,ss11,a100,hbm80g
-#SBATCH --time=00:30:00
-#SBATCH --job-name=incr_dec8b
+#SBATCH --time=01:00:00
+#SBATCH --job-name=incr_dec70b
 #SBATCH --output=/global/homes/g/goliaro/flexllm/benchmarking/output/slurm/%x_%A_%a.out
 #SBATCH --error=/global/homes/g/goliaro/flexllm/benchmarking/output/slurm/%x_%A_%a.err
 #SBATCH --array=0-69
@@ -24,14 +24,14 @@ cd "$CWD_/flexflow-serve/build"
 source ./set_python_envs.sh
 
 # Define constant variables
-MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
-NGPUS=1
+MODEL_NAME="meta-llama/Llama-3.1-70B-Instruct"
+NGPUS=4
 NCPUS=16
 FSIZE=76000
-ZSIZE=40000
+ZSIZE=200000
 CSIZE=2048
 
-OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/8B"
+OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/70B"
 TRACES_FOLDER="../../benchmarking/traces"
 MAX_SEQ_LEN=8192
 NUM_KV_CACHE_SLOTS=240000

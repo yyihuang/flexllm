@@ -1,10 +1,29 @@
 from collections import defaultdict, namedtuple
-import os, itertools
+import os, itertools, json
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from dataclasses import dataclass
 
-IncrDecExpKey = namedtuple('IncrDecExpKey', ['model', 'dataset', 'max_tokens_per_batch', 'max_batch_size'])
+@dataclass(frozen=True)
+class IncrDecExpKey:
+    model: str
+    dataset: str
+    max_tokens_per_batch: int
+    max_batch_size: int
+
+@dataclass(frozen=True)
+class VllmExpKey:
+    model: str
+    dataset: str
+    v1: int
+    eager: bool
+
+@dataclass(frozen=True)
+class VllmExpValue:
+    tpot: float
+    throughput: float
+
 
 def get_tpot(df_original):
     df = df_original.copy()
@@ -135,7 +154,7 @@ def plot_tpot(req_prof_data, output_dir="./plots"):
             plt.savefig(outfile)
             plt.close()
 
-def plot_throughput_vs_tpot(req_prof_data, output_dir="./plots"):
+def plot_throughput_vs_tpot(req_prof_data, output_dir="./plots", vllm_data={}):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -179,6 +198,19 @@ def plot_throughput_vs_tpot(req_prof_data, output_dir="./plots"):
                 for x, y, tokens in zip(tpot_values, throughput_values, token_values):
                     plt.annotate(f"{tokens}", (x, y), textcoords="offset points", xytext=(5, 5), fontsize=8)
             
+            # Plot VLLM data with distinct styles, reducing duplication.
+            vllm_styles = [
+                (0, False, "*", 10, "red", "VLLM"),
+                (0, True, "s", 10, "green", "VLLM (eager)"),
+                (1, False, "^", 10, "blue", "VLLM v1"),
+                (1, True, "d", 10, "purple", "VLLM v1 (eager)")
+            ]
+            for v1, eager, marker, markersize, color, label in vllm_styles:
+                key = VllmExpKey(model=model, dataset=dataset, v1=v1, eager=eager)
+                if key in vllm_data:
+                    plt.plot(vllm_data[key].tpot, vllm_data[key].throughput,
+                             marker=marker, markersize=markersize, color=color, label=label)
+            
             plt.xlabel("TPOT (ms)")
             plt.ylabel("Throughput (tokens/sec)")
             plt.title(f"Throughput vs TPOT\nDataset: {dataset}, Model: {model}")
@@ -189,6 +221,40 @@ def plot_throughput_vs_tpot(req_prof_data, output_dir="./plots"):
             plt.savefig(outfile)
             plt.close()
 
+def read_experiments_data(folder, models, datasets, max_tokens_per_batch, max_batch_size):
+    req_prof_data = {}
+    step_prof_data = {}
+
+    # Iterate over every combination of the possible key values.
+    for model, dataset, tokens, batch in itertools.product(models, datasets, max_tokens_per_batch, max_batch_size):
+        req_prefix = "inference_request_profiling_"
+        step_prefix = "step_profiling_"
+        fp = f"{dataset}_{model}_tensor_parallelism_1_max_requests_per_batch_{batch}_max_tokens_per_batch_{tokens}_num_kv_cache_slots_400000_qps_0.000000_num_warmup_requests_10.csv"
+        key = IncrDecExpKey(model, dataset, tokens, batch)
+        req_prof_data[key] = pd.read_csv(os.path.join(folder, req_prefix + fp))
+        step_prof_data[key] = pd.read_csv(os.path.join(folder, step_prefix + fp))
+    return req_prof_data, step_prof_data
+
+def read_vllm_data(folder, models, datasets, vllm_v1, eager_modes):
+    vllm_data = {}
+    for model in models:
+        for dataset in datasets:
+            for v1 in vllm_v1:
+                for eager in eager_modes:
+                    key = VllmExpKey(model, dataset, v1, eager)
+                    eager_str = "_eager" if eager else ""
+                    v1_str = "_v1" if v1 == 1 else ""
+                    filename=f"results_{dataset}{eager_str}{v1_str}_{model}.json"
+                    fp = os.path.join(folder, filename)
+                    # print(fp)
+                    assert os.path.exists(fp)
+
+                    with open(fp) as f:
+                        result = json.load(f)
+                        assert key not in vllm_data, f"Duplicate key found: {key}"
+                        vllm_data[key] = VllmExpValue(tpot=result["mean_tpot_ms"], throughput=result["output_throughput"])
+
+    return vllm_data
 
 if __name__ == "__main__":
     models=["meta-llama/Llama-3.1-8B-Instruct".lower().replace("/", "_")]
@@ -196,23 +262,19 @@ if __name__ == "__main__":
     # datasets=["sharegpt"]
     max_tokens_per_batch=[128, 256, 512, 1024, 2048]
     max_batch_size=[4, 8, 16, 32, 64, 128, 256]
+    profiling_folder = "/pscratch/sd/g/goliaro/output/incr_decoding/8B/profiling/"
+    vllm_prof_folder="/global/homes/g/goliaro/flexllm/benchmarking/output/vllm"
 
-    req_prof_data = {}
-    step_prof_data = {}
+    vllm_v1=[0,1]
+    eager_modes=[True, False]
 
     # Change directory to that holding this script
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # Iterate over every combination of the possible key values.
-    for model, dataset, tokens, batch in itertools.product(models, datasets, max_tokens_per_batch, max_batch_size):
-        folder = "/pscratch/sd/g/goliaro/output/incr_decoding/8B/profiling/"
-        req_prefix = "inference_request_profiling_"
-        step_prefix = "step_profiling_"
-        fp = f"{dataset}_{model}_tensor_parallelism_1_max_requests_per_batch_{batch}_max_tokens_per_batch_{tokens}_num_kv_cache_slots_400000_qps_0.000000_num_warmup_requests_10.csv"
-        key = IncrDecExpKey(model, dataset, tokens, batch)
-        req_prof_data[key] = pd.read_csv(os.path.join(folder, req_prefix + fp))
-        step_prof_data[key] = pd.read_csv(os.path.join(folder, step_prefix + fp))
+    req_prof_data, step_prof_data = read_experiments_data(profiling_folder, models, datasets, max_tokens_per_batch, max_batch_size)
+
+    vllm_data = read_vllm_data(vllm_prof_folder, models, datasets, vllm_v1, eager_modes)
 
     plot_throughput(req_prof_data)
     plot_tpot(req_prof_data)
-    plot_throughput_vs_tpot(req_prof_data)
+    plot_throughput_vs_tpot(req_prof_data, vllm_data=vllm_data)
