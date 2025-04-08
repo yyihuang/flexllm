@@ -13,7 +13,7 @@ VLLM_V1=(
 )
 MODEL_NAMES=(
   "meta-llama/Llama-3.1-8B-Instruct"
-  # "Qwen/Qwen2.5-32B"
+  # "Qwen/Qwen2.5-32B-Instruct"
   # "meta-llama/Llama-3.3-70B-Instruct"
 )
 TP_DEGREES=(

@@ -229,7 +229,7 @@ def read_experiments_data(folder, models, datasets, max_tokens_per_batch, max_ba
     for model, dataset, tokens, batch in itertools.product(models, datasets, max_tokens_per_batch, max_batch_size):
         req_prefix = "inference_request_profiling_"
         step_prefix = "step_profiling_"
-        fp = f"{dataset}_{model}_tensor_parallelism_1_max_requests_per_batch_{batch}_max_tokens_per_batch_{tokens}_num_kv_cache_slots_400000_qps_0.000000_num_warmup_requests_10.csv"
+        fp = f"{dataset}_{model}_tensor_parallelism_1_max_requests_per_batch_{batch}_max_tokens_per_batch_{tokens}_num_kv_cache_slots_240000_qps_0.000000_num_warmup_requests_10.csv"
         key = IncrDecExpKey(model, dataset, tokens, batch)
         req_prof_data[key] = pd.read_csv(os.path.join(folder, req_prefix + fp))
         step_prof_data[key] = pd.read_csv(os.path.join(folder, step_prefix + fp))
@@ -260,9 +260,11 @@ if __name__ == "__main__":
     models=["meta-llama/Llama-3.1-8B-Instruct".lower().replace("/", "_")]
     datasets=["sharegpt", "wildchat"]
     # datasets=["sharegpt"]
-    max_tokens_per_batch=[128, 256, 512, 1024, 2048]
-    max_batch_size=[4, 8, 16, 32, 64, 128, 256]
-    profiling_folder = "/pscratch/sd/g/goliaro/output/incr_decoding/8B/profiling/"
+    # max_tokens_per_batch=[128, 256, 512, 1024, 2048]
+    # max_batch_size=[4, 8, 16, 32, 64, 128, 256]
+    max_tokens_per_batch=[128, 512, 2048]
+    max_batch_size=[32, 64, 256]
+    profiling_folder = "/global/homes/g/goliaro/flexllm/benchmarking/output/incr_decoding/8B/profiling"
     vllm_prof_folder="/global/homes/g/goliaro/flexllm/benchmarking/output/vllm"
 
     vllm_v1=[0,1]
@@ -277,4 +279,4 @@ if __name__ == "__main__":
 
     plot_throughput(req_prof_data)
     plot_tpot(req_prof_data)
-    plot_throughput_vs_tpot(req_prof_data, vllm_data=vllm_data)
+    plot_throughput_vs_tpot(req_prof_data, vllm_data={})

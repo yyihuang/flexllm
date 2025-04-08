@@ -24,7 +24,7 @@ cd "$CWD_/flexflow-serve/build"
 source ./set_python_envs.sh
 
 # Define constant variables
-MODEL_NAME="Qwen/Qwen2.5-32B"
+MODEL_NAME="Qwen/Qwen2.5-32B-Instruct"
 NGPUS=2
 NCPUS=16
 FSIZE=78000

@@ -8,7 +8,7 @@ cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 # make -j 
 source ./set_python_envs.sh
 
-MODEL_NAME="Qwen/Qwen2.5-32B"
+MODEL_NAME="Qwen/Qwen2.5-32B-Instruct"
 NGPUS=2
 NCPUS=16
 FSIZE=78000

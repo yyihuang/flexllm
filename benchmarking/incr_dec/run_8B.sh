@@ -18,15 +18,15 @@ CSIZE=2048
 OUTPUT_FOLDER="../../benchmarking/output/incr_decoding/8B"
 TRACES_FOLDER="../../benchmarking/traces"
 MAX_SEQ_LEN=8192
-NUM_KV_CACHE_SLOTS=240000
+NUM_KV_CACHE_SLOTS=400000
 batch_sizes=(
     256
-    128
+    # 128
     64
     32
-    16
-    8
-    4
+    # 16
+    # 8
+    # 4
 )
 
 trace_files=(
@@ -36,9 +36,9 @@ trace_files=(
 
 max_tokens_per_batch_values=(
     2048
-    1024
+    # 1024
     512
-    256
+    # 256
     128
 )
 

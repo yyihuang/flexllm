@@ -15,12 +15,12 @@ FSIZE=76000
 ZSIZE=40000
 CSIZE=2048
 
-OUTPUT_FOLDER="../../benchmarking/output/nsys/8B"
+OUTPUT_FOLDER="$PSCRATCH/benchmarking/output/nsys/8B"
 TRACES_FOLDER="../../benchmarking/traces"
 MAX_SEQ_LEN=8192
 NUM_KV_CACHE_SLOTS=240000
-batch_size=1
-max_tokens_per_batch=2048
+batch_size=256
+max_tokens_per_batch=128
 trace_file=sharegpt
 
 
@@ -41,8 +41,7 @@ OUTPUT_FILE="${OUTPUT_FOLDER}/output/${trace_file}_bz_${batch_size}_tokens_per_b
 LOG_FILE="${OUTPUT_FOLDER}/logs/${trace_file}_bz_${batch_size}_tokens_per_batch_${max_tokens_per_batch}_kv_cache_slots_${NUM_KV_CACHE_SLOTS}.out"
 rm $OUTPUT_FILE $LOG_FILE || true
 
-export LEGION_BACKTRACE=1
-
+# export LEGION_BACKTRACE=1
 nsys profile \
 --output ${OUTPUT_FOLDER}/report.nsys-rep \
 --force-overwrite true \

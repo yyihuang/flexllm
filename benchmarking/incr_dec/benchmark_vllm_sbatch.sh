@@ -25,7 +25,7 @@ export PYTHONPATH="$(realpath $PWD/../../vllm)"
 VLLM_V1=(0 1)
 MODEL_NAMES=(
   "meta-llama/Llama-3.1-8B-Instruct"
-  "Qwen/Qwen2.5-32B"
+  "Qwen/Qwen2.5-32B-Instruct"
   "meta-llama/Llama-3.1-70B-Instruct"
 )
 TP_DEGREES=(1 2 4)
