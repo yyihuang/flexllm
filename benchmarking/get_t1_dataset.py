@@ -61,7 +61,8 @@ def main(model_name, num_entries, max_length, seed, output_folder):
     
     # drop the "text column"
     filtered_dataset = filtered_dataset.remove_columns("text").remove_columns("token_count")
-    llama_factory_output_file=os.path.join(output_folder, "t1_llama_factory.json")
+    llama_factory_output_folder = os.path.abspath("../LLaMA-Factory/data")
+    llama_factory_output_file=os.path.join(llama_factory_output_folder, "t1_flexllm.json")
     with open(llama_factory_output_file, "w") as f:
         json.dump(list(filtered_dataset), f, indent=2)
 
