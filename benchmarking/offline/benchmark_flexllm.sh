@@ -6,12 +6,12 @@ cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 source ./set_python_envs.sh
 
 MODEL_NAMES=(
-#   "meta-llama/Llama-3.1-8B-Instruct"
+  "meta-llama/Llama-3.1-8B-Instruct"
   "mistralai/Mistral-Small-24B-Instruct-2501"
   "meta-llama/Llama-3.1-70B-Instruct"
 )
 TP_DEGREES=(
-#   1
+  1
   2
   4
 )
