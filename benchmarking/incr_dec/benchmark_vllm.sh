@@ -8,22 +8,40 @@ cd "${BASH_SOURCE[0]%/*}"
 export PYTHONPATH="$(realpath $PWD/../../vllm)"
 
 VLLM_V1=(
-  0
+  # 0
   1
 )
 MODEL_NAMES=(
-  "meta-llama/Llama-3.1-8B-Instruct"
-  # "Qwen/Qwen2.5-32B-Instruct"
-  # "meta-llama/Llama-3.3-70B-Instruct"
+  # "meta-llama/Llama-3.1-8B-Instruct"
+  # "mistralai/Mistral-Small-24B-Instruct-2501"
+  "meta-llama/Llama-3.1-70B-Instruct"
 )
 TP_DEGREES=(
-  1
+  # 1
   # 2
-  # 4
+  4
 )
 TRACES=(
   sharegpt
-  wildchat
+  # wildchat
+)
+
+batch_sizes=(
+  256
+  # 128
+  64
+  32
+  # 16
+  # 8
+  # 4
+)
+
+max_tokens_per_batch_values=(
+  # 2048
+  1024
+  # 512
+  256
+  128
 )
 
 check_gpus() {
@@ -69,11 +87,22 @@ run_serving_tests() {
   local trace=$3
   local vllm_use_v1=$4
   local eager_mode=$5
+  local batch_size=$6
+  local max_num_batched_tokens=$7
+
+  # if the max_num_batched_tokens is less than the batch_size, return
+  if [ "$max_num_batched_tokens" -lt "$batch_size" ]; then
+    echo "max_num_batched_tokens is less than batch_size, skipping this test."
+    return
+  fi
 
   server_command="VLLM_USE_V1=${vllm_use_v1} python3 \
       -m vllm.entrypoints.openai.api_server \
       --model ${model_name} \
       --tensor-parallel-size ${tp_degree} \
+      --enable-chunked-prefill \
+      --max-num-seqs ${batch_size} \
+      --max-num-batched-tokens ${max_num_batched_tokens} \
       --swap-space 0 \
       --disable-log-stats \
       --disable-log-requests"
@@ -98,7 +127,7 @@ run_serving_tests() {
   mkdir -p ../output/vllm
 
   # Construct the result filename and convert it to lowercase.
-  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )$( [ "$vllm_use_v1" = 1 ] && echo "v1_" )${model_name//\//_}.json" | tr '[:upper:]' '[:lower:]')
+  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )$( [ "$vllm_use_v1" = 1 ] && echo "v1_" )${model_name//\//_}_bz_${batch_size}_max_num_batched_tokens_${max_num_batched_tokens}.json" | tr '[:upper:]' '[:lower:]')
 
   # Build the client command with the result_filename variable.
   client_command="VLLM_USE_V1=${vllm_use_v1} PYTHONPATH=${PYTHONPATH} python3 benchmark_vllm.py \
@@ -106,7 +135,7 @@ run_serving_tests() {
         --backend vllm \
         --ignore-eos \
         --dataset-path ../traces/${trace}.json \
-        --save-result \
+        --save-result --save-detailed \
         --result-dir ../output/vllm \
         --result-filename ${result_filename}"
 
@@ -133,13 +162,18 @@ main() {
     for vllm_v1 in "${VLLM_V1[@]}"; do
     for eager_mode in true false; do
     for i in "${!MODEL_NAMES[@]}"; do
+    for batch_size in "${batch_sizes[@]}"; do
+    for max_num_batched_tokens in "${max_tokens_per_batch_values[@]}"; do
       model_name="${MODEL_NAMES[$i]}"
       tp_degree="${TP_DEGREES[$i]}"
-      run_serving_tests "$model_name" "$tp_degree" "$trace" "$vllm_v1" "$eager_mode"
+      run_serving_tests "$model_name" "$tp_degree" "$trace" "$vllm_v1" "$eager_mode" "$batch_size" "$max_num_batched_tokens"
     done
     done
     done
     done
+    done
+    done
+
 }
 
 main

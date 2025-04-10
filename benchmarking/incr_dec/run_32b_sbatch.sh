@@ -85,4 +85,5 @@ time ./inference/incr_decoding/incr_decoding \
     --max-tokens-per-batch $MAX_TOKENS_PER_BATCH \
     --max-sequence-length $MAX_SEQ_LEN \
     --num-kv-cache-slots $NUM_KV_CACHE_SLOTS \
+    --ignore-eos \
     --warmup 2>&1 | tee "$LOG_FILE"

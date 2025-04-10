@@ -21,23 +21,23 @@ MAX_SEQ_LEN=8192
 NUM_KV_CACHE_SLOTS=240000
 batch_sizes=(
     256
-    128
+    # 128
     64
     32
-    16
-    8
-    4
+    # 16
+    # 8
+    # 4
 )
 
 trace_files=(
     sharegpt
-    wildchat
+    # wildchat
 )
 
 max_tokens_per_batch_values=(
-    2048
+    # 2048
     1024
-    512
+    # 512
     256
     128
 )
@@ -76,7 +76,9 @@ for j in "${!max_tokens_per_batch_values[@]}"; do
         --max-tokens-per-batch $MAX_TOKENS_PER_BATCH \
         --max-sequence-length $MAX_SEQ_LEN \
         --num-kv-cache-slots $NUM_KV_CACHE_SLOTS \
-        --warmup 2>&1 | tee $LOG_FILE
+        --ignore-eos --warmup 
+        #  2>&1 | tee $LOG_FILE
+    sleep 5
 done
 done
 done

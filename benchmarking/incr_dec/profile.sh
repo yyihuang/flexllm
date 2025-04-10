@@ -60,4 +60,5 @@ nsys profile \
     --max-tokens-per-batch $max_tokens_per_batch \
     --max-sequence-length $MAX_SEQ_LEN \
     --num-kv-cache-slots $NUM_KV_CACHE_SLOTS \
+    --ignore-eos \
     --warmup

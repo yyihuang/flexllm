@@ -24,25 +24,22 @@ On the client side, run:
 """
 import argparse
 import asyncio
-import base64
 import gc
-import io
 import json
 import os
 import random
 import time
 import warnings
+from collections.abc import AsyncGenerator, Iterable
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, AsyncGenerator, Collection, Dict, List, Optional, Tuple
-from collections import OrderedDict
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 from benchmarks.backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
                                   RequestFuncOutput)
-from datasets import load_dataset
-from PIL.Image import Image
 from tqdm.asyncio import tqdm
 from transformers import PreTrainedTokenizerBase
 
@@ -56,6 +53,11 @@ try:
 except ImportError:
     from argparse import ArgumentParser as FlexibleArgumentParser
 
+from benchmarks.benchmark_dataset import (AIMODataset, BurstGPTDataset,
+                               ConversationDataset, HuggingFaceDataset,
+                               InstructCoderDataset, RandomDataset,
+                               SampleRequest, ShareGPTDataset, SonnetDataset,
+                               VisionArenaDataset)
 from benchmarks.benchmark_utils import convert_to_pytorch_benchmark_format
 
 MILLISECONDS_TO_SECONDS_CONVERSION = 1000
@@ -73,22 +75,22 @@ class BenchmarkMetrics:
     mean_ttft_ms: float
     median_ttft_ms: float
     std_ttft_ms: float
-    percentiles_ttft_ms: List[Tuple[float, float]]
+    percentiles_ttft_ms: list[tuple[float, float]]
     mean_tpot_ms: float
     median_tpot_ms: float
     std_tpot_ms: float
-    percentiles_tpot_ms: List[Tuple[float, float]]
+    percentiles_tpot_ms: list[tuple[float, float]]
     mean_itl_ms: float
     median_itl_ms: float
     std_itl_ms: float
-    percentiles_itl_ms: List[Tuple[float, float]]
+    percentiles_itl_ms: list[tuple[float, float]]
     # E2EL stands for end-to-end latency per request.
     # It is the time taken on the client side from sending
     # a request to receiving a complete response.
     mean_e2el_ms: float
     median_e2el_ms: float
     std_e2el_ms: float
-    percentiles_e2el_ms: List[Tuple[float, float]]
+    percentiles_e2el_ms: list[tuple[float, float]]
 
 
 def load_trace(dataset_path: str, max_num_requests: int):
@@ -97,22 +99,22 @@ def load_trace(dataset_path: str, max_num_requests: int):
     dataset = dataset["entries"]
     if len(dataset) > max_num_requests:
         dataset = dataset[:max_num_requests]
-    requests = [(entry["prompt"], entry["prompt_length"], entry["response_length"], None) for entry in dataset]
+    requests = [SampleRequest(prompt=entry["prompt"], prompt_len=entry["prompt_length"], expected_output_len=entry["response_length"]) for entry in dataset]
     return requests
 
 
 async def get_request(
-    input_requests: List[Tuple[str, int, int]],
+    input_requests: list[SampleRequest],
     request_rate: float,
     burstiness: float = 1.0,
-) -> AsyncGenerator[Tuple[str, int, int], None]:
+) -> AsyncGenerator[SampleRequest, None]:
     """
     Asynchronously generates requests at a specified rate
     with OPTIONAL burstiness.
 
     Args:
         input_requests:
-            A list of input requests, each represented as a tuple.
+            A list of input requests, each represented as a SampleRequest.
         request_rate:
             The rate at which requests are generated (requests/s).
         burstiness (optional):
@@ -124,7 +126,7 @@ async def get_request(
             in more bursty requests, while a higher burstiness value
             (burstiness > 1) results in a more uniform arrival of requests.
     """
-    input_requests = iter(input_requests)
+    input_requests: Iterable[SampleRequest] = iter(input_requests)
 
     # Calculate scale parameter theta to maintain the desired request_rate.
     assert burstiness > 0, (
@@ -146,23 +148,23 @@ async def get_request(
 
 
 def calculate_metrics(
-    input_requests: List[Tuple[str, int, int]],
-    outputs: List[RequestFuncOutput],
+    input_requests: list[SampleRequest],
+    outputs: list[RequestFuncOutput],
     dur_s: float,
     tokenizer: PreTrainedTokenizerBase,
-    selected_percentile_metrics: List[str],
-    selected_percentiles: List[float],
-    goodput_config_dict: Dict[str, float],
-) -> Tuple[BenchmarkMetrics, List[int]]:
-    actual_output_lens: List[int] = []
+    selected_percentile_metrics: list[str],
+    selected_percentiles: list[float],
+    goodput_config_dict: dict[str, float],
+) -> tuple[BenchmarkMetrics, list[int]]:
+    actual_output_lens: list[int] = []
     total_input = 0
     completed = 0
     good_completed = 0
-    itls: List[float] = []
-    tpots: List[float] = []
-    all_tpots: List[float] = []
-    ttfts: List[float] = []
-    e2els: List[float] = []
+    itls: list[float] = []
+    tpots: list[float] = []
+    all_tpots: list[float] = []
+    ttfts: list[float] = []
+    e2els: list[float] = []
     for i in range(len(outputs)):
         if outputs[i].success:
             output_len = outputs[i].output_tokens
@@ -177,7 +179,7 @@ def calculate_metrics(
                     tokenizer(outputs[i].generated_text,
                               add_special_tokens=False).input_ids)
             actual_output_lens.append(output_len)
-            total_input += input_requests[i][1]
+            total_input += input_requests[i].prompt_len
             tpot = 0
             if output_len > 1:
                 latency_minus_ttft = outputs[i].latency - outputs[i].ttft
@@ -260,19 +262,18 @@ async def benchmark(
     model_id: str,
     model_name: str,
     tokenizer: PreTrainedTokenizerBase,
-    input_requests: List[Tuple[str, int, int]],
+    input_requests: list[SampleRequest],
     logprobs: Optional[int],
-    best_of: int,
     request_rate: float,
     burstiness: float,
     disable_tqdm: bool,
     profile: bool,
-    selected_percentile_metrics: List[str],
-    selected_percentiles: List[str],
+    selected_percentile_metrics: list[str],
+    selected_percentiles: list[float],
     ignore_eos: bool,
-    goodput_config_dict: Dict[str, float],
+    goodput_config_dict: dict[str, float],
     max_concurrency: Optional[int],
-    lora_modules: Optional[List[str]],
+    lora_modules: Optional[Iterable[str]],
 ):
     if backend in ASYNC_REQUEST_FUNCS:
         request_func = ASYNC_REQUEST_FUNCS[backend]
@@ -280,12 +281,16 @@ async def benchmark(
         raise ValueError(f"Unknown backend: {backend}")
 
     print("Starting initial single prompt test run...")
-    test_prompt, test_prompt_len, test_output_len, test_mm_content = (
-        input_requests[0])
+    test_prompt, test_prompt_len, test_output_len, test_mm_content = \
+        input_requests[0].prompt, input_requests[0].prompt_len, \
+        input_requests[0].expected_output_len, \
+            input_requests[0].multi_modal_data
+
     if backend != "openai-chat" and test_mm_content is not None:
         # multi-modal benchmark is only available on OpenAI Chat backend.
         raise ValueError(
             "Multi-modal content is only supported on 'openai-chat' backend.")
+    assert test_mm_content is None or isinstance(test_mm_content, dict)
     test_input = RequestFuncInput(
         model=model_id,
         model_name=model_name,
@@ -294,7 +299,6 @@ async def benchmark(
         prompt_len=test_prompt_len,
         output_len=test_output_len,
         logprobs=logprobs,
-        best_of=best_of,
         multi_modal_content=test_mm_content,
         ignore_eos=ignore_eos,
     )
@@ -310,7 +314,8 @@ async def benchmark(
     if lora_modules:
         # For each input request, choose a LoRA module at random.
         lora_modules = iter(
-            [random.choice(lora_modules) for _ in range(len(input_requests))])
+            [random.choice(lora_modules) \
+                for _ in range(len(input_requests))])
 
     if profile:
         print("Starting profiler...")
@@ -321,7 +326,6 @@ async def benchmark(
                                          prompt_len=test_prompt_len,
                                          output_len=test_output_len,
                                          logprobs=logprobs,
-                                         best_of=best_of,
                                          multi_modal_content=test_mm_content,
                                          ignore_eos=ignore_eos)
         profile_output = await request_func(request_func_input=profile_input)
@@ -355,9 +359,11 @@ async def benchmark(
                                       pbar=pbar)
 
     benchmark_start_time = time.perf_counter()
-    tasks: List[asyncio.Task] = []
+    tasks: list[asyncio.Task] = []
     async for request in get_request(input_requests, request_rate, burstiness):
-        prompt, prompt_len, output_len, mm_content = request
+        prompt, prompt_len, output_len, mm_content = request.prompt, \
+            request.prompt_len, request.expected_output_len, \
+                request.multi_modal_data
         req_model_id, req_model_name = model_id, model_name
         if lora_modules:
             req_lora_module = next(lora_modules)
@@ -370,14 +376,13 @@ async def benchmark(
                                               prompt_len=prompt_len,
                                               output_len=output_len,
                                               logprobs=logprobs,
-                                              best_of=best_of,
                                               multi_modal_content=mm_content,
                                               ignore_eos=ignore_eos)
         tasks.append(
             asyncio.create_task(
                 limited_request_func(request_func_input=request_func_input,
                                      pbar=pbar)))
-    outputs: List[RequestFuncOutput] = await asyncio.gather(*tasks)
+    outputs: list[RequestFuncOutput] = await asyncio.gather(*tasks)
 
     if profile:
         print("Stopping profiler...")
@@ -388,7 +393,6 @@ async def benchmark(
             prompt_len=test_prompt_len,
             output_len=test_output_len,
             logprobs=logprobs,
-            best_of=best_of,
         )
         profile_output = await request_func(request_func_input=profile_input)
         if profile_output.success:
@@ -523,7 +527,7 @@ def parse_goodput(slo_pairs):
 
 
 def save_to_pytorch_benchmark_format(args: argparse.Namespace,
-                                     results: Dict[str, Any],
+                                     results: dict[str, Any],
                                      file_name: str) -> None:
     metrics = [
         "median_ttft_ms", "mean_ttft_ms", "std_ttft_ms", "p99_ttft_ms",
@@ -544,8 +548,7 @@ def save_to_pytorch_benchmark_format(args: argparse.Namespace,
     if pt_records:
         # Don't use json suffix here as we don't want CI to pick it up
         pt_file = f"{os.path.splitext(file_name)[0]}.pytorch.json"
-        with open(pt_file, "w") as f:
-            json.dump(pt_records, f)
+        write_to_json(pt_file, pt_records)
 
 
 def main(args: argparse.Namespace):
@@ -591,7 +594,6 @@ def main(args: argparse.Namespace):
             tokenizer=tokenizer,
             input_requests=input_requests,
             logprobs=args.logprobs,
-            best_of=args.best_of,
             request_rate=args.request_rate,
             burstiness=args.burstiness,
             disable_tqdm=args.disable_tqdm,
@@ -608,7 +610,7 @@ def main(args: argparse.Namespace):
 
     # Save config and results to json
     if args.save_result:
-        result_json: Dict[str, Any] = {}
+        result_json: dict[str, Any] = {}
 
         # Setup
         current_dt = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -616,7 +618,6 @@ def main(args: argparse.Namespace):
         result_json["backend"] = backend
         result_json["model_id"] = model_id
         result_json["tokenizer_id"] = tokenizer_id
-        result_json["best_of"] = args.best_of
         result_json["num_prompts"] = len(input_requests)
 
         # Metadata
@@ -629,6 +630,15 @@ def main(args: argparse.Namespace):
                     raise ValueError(
                         "Invalid metadata format. Please use KEY=VALUE format."
                     )
+
+        if not args.save_detailed:
+            # Remove fields with too many data points
+            for field in [
+                    "input_lens", "output_lens", "ttfts", "itls",
+                    "generated_texts", "errors"
+            ]:
+                if field in result_json:
+                    del result_json[field]
 
         # Traffic
         result_json["request_rate"] = (args.request_rate if args.request_rate
@@ -708,13 +718,6 @@ if __name__ == "__main__":
         help=
         "Name or path of the tokenizer, if not using the default tokenizer.",  # noqa: E501
     )
-    parser.add_argument(
-        "--best-of",
-        type=int,
-        default=1,
-        help="Generates `best_of` sequences per prompt and "
-        "returns the best one.",
-    )
     parser.add_argument("--use-beam-search", action="store_true")
     parser.add_argument(
         "--num-prompts",
@@ -774,6 +777,12 @@ if __name__ == "__main__":
         "--save-result",
         action="store_true",
         help="Specify to save benchmark results to a json file",
+    )
+    parser.add_argument(
+        "--save-detailed",
+        action="store_true",
+        help="When saving the results, whether to include per request "
+        "information such as response, error, ttfs, tpots, etc.",
     )
     parser.add_argument(
         "--metadata",
@@ -859,4 +868,5 @@ if __name__ == "__main__":
                         "script chooses a LoRA module at random.")
 
     args = parser.parse_args()
+
     main(args)
