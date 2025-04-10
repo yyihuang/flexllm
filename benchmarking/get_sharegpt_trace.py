@@ -286,11 +286,11 @@ def save_trace(trace: Trace, output_path: str):
     print(f"Trace saved to {output_path}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build WildChat trace")
+    parser = argparse.ArgumentParser(description="Build ShareGPT trace")
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-70B-Instruct", help="Model name")
     parser.add_argument("-m", "--max-length", type=int, default=8192, help="Maximum prompt + response length")
-    parser.add_argument("-n", "--num_entries", type=int, default=1000, help="Number of entries")
-    parser.add_argument("-s", "--seed", type=int, default=0, help="Random seed")
+    parser.add_argument("-n", "--num_entries", type=int, default=1500, help="Number of entries")
+    parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")
     parser.add_argument("-o", "--output_file", type=str, default="./traces/sharegpt.json", help="Output file name")
     parser.add_argument("-t", "--trace-type", type=str, choices=["offline", "poisson", "splitwise"], default="offline", help="Arrival Times Trace Type")
     parser.add_argument("-a", "--arrival-rate", type=float, default=0.0, help="Arrival Rate")
