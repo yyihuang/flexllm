@@ -311,7 +311,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-70B-Instruct", help="Model name")
     parser.add_argument("-m", "--max-length", type=int, default=8192, help="Maximum prompt + response length")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("-d", "--duration", type=int, default=20, help="Slice duration in minutes")
+    parser.add_argument("-d", "--duration", type=int, default=10, help="Slice duration in minutes")
     parser.add_argument("-o", "--output_folder", type=str, default="./traces/burstgpt", help="Output folder path")
     parser.add_argument("-q", "--qps", type=float, default=5.0, help="Arrival Rate in req/s")
     args = parser.parse_args()
@@ -319,17 +319,20 @@ if __name__ == "__main__":
     # Change directory to that holding this script
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    is_mistral = "mistral" in args.model_name.lower()
+    mistral_suffix = "_mistral" if is_mistral else ""
+
     timestamps_df = get_burstgpt_timestamps(slice_duration_sec=args.duration*60, output_folder=args.output_folder, seed=args.seed)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     df_slice = add_sharegpt_prompts_and_responses(timestamps_df, tokenizer, args.max_length, seed=args.seed, apply_chat_template=False)
     
     # Plot original slice
-    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt_original_req.png"))
-    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt_original_thr.png"), tokens=True)
+    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_original_req.png"))
+    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_original_thr.png"), tokens=True)
 
     df_scaled = scale_arrival_rate_fixed_duration(df_slice, target_rate_sec=args.qps)
     df_scaled2 = add_sharegpt_prompts_and_responses(df_scaled, tokenizer, args.max_length, seed=args.seed, apply_chat_template=False)
-    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt_{args.qps:.2}_qps_req.png"))
-    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt_{args.qps:.2}_qps_thr.png"), tokens=True)
+    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps_req.png"))
+    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps_thr.png"), tokens=True)
     
-    save_trace(df_scaled2, qps=args.qps, filepath=os.path.join(args.output_folder, f"sharegpt_{args.qps:.2}_qps.json"))
+    save_trace(df_scaled2, qps=args.qps, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps.json"))
