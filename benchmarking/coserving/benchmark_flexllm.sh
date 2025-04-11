@@ -44,7 +44,7 @@ FT_LOGGING_STEPS=100
 OUTPUT_FOLDER="../../benchmarking/output/coserving/flexllm"
 TRACES_FOLDER="../../benchmarking/traces/burstgpt"
 FINETUNING_DATASET="t1"
-FINETUNING_DATASET_FILE="${TRACES_FOLDER}/${FINETUNING_DATASET}.json"
+FINETUNING_DATASET_FILE="${TRACES_FOLDER}/../${FINETUNING_DATASET}.json"
 
 mkdir -p $OUTPUT_FOLDER/output
 mkdir -p $OUTPUT_FOLDER/logs
