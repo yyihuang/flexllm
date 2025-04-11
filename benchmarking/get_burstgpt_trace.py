@@ -204,7 +204,7 @@ def plot_histogram(df_hist, filepath, bin_width=5, tokens=False):
     plt.close()  # Close the figure to free memory
 
 def get_burstgpt_timestamps(slice_duration_sec, output_folder, seed):
-    dataset_path = os.path.join(output_folder, "BurstGPT_without_fails_2.csv")
+    dataset_path = os.path.join(output_folder, "..", "BurstGPT_without_fails_2.csv")
     # if a file does not exist at the dataset path, download it from https://github.com/HPMLL/BurstGPT/releases/download/v1.1/BurstGPT_without_fails_2.csv
     if not os.path.exists(dataset_path):
         download_url = "https://github.com/HPMLL/BurstGPT/releases/download/v1.1/BurstGPT_without_fails_2.csv"
@@ -319,20 +319,25 @@ if __name__ == "__main__":
     # Change directory to that holding this script
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    is_mistral = "mistral" in args.model_name.lower()
-    mistral_suffix = "_mistral" if is_mistral else ""
+    model_subfolder = "8B" 
+    if "mistral" in args.model_name.lower():
+        model_subfolder = "mistral"
+    elif "70b" in args.model_name.lower():
+        model_subfolder = "70B"
+    output_folder = os.path.join(args.output_folder, model_subfolder)
+    os.makedirs(output_folder, exist_ok=True)
 
-    timestamps_df = get_burstgpt_timestamps(slice_duration_sec=args.duration*60, output_folder=args.output_folder, seed=args.seed)
+    timestamps_df = get_burstgpt_timestamps(slice_duration_sec=args.duration*60, output_folder=output_folder, seed=args.seed)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     df_slice = add_sharegpt_prompts_and_responses(timestamps_df, tokenizer, args.max_length, seed=args.seed, apply_chat_template=False)
     
     # Plot original slice
-    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_original_req.png"))
-    plot_histogram(df_slice, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_original_thr.png"), tokens=True)
+    plot_histogram(df_slice, filepath=os.path.join(output_folder, f"sharegpt_{args.max_length}_original_req.png"))
+    plot_histogram(df_slice, filepath=os.path.join(output_folder, f"sharegpt_{args.max_length}_original_thr.png"), tokens=True)
 
     df_scaled = scale_arrival_rate_fixed_duration(df_slice, target_rate_sec=args.qps)
     df_scaled2 = add_sharegpt_prompts_and_responses(df_scaled, tokenizer, args.max_length, seed=args.seed, apply_chat_template=False)
-    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps_req.png"))
-    plot_histogram(df_scaled2, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps_thr.png"), tokens=True)
+    plot_histogram(df_scaled2, filepath=os.path.join(output_folder, f"sharegpt_{args.max_length}_{args.qps:.2}_qps_req.png"))
+    plot_histogram(df_scaled2, filepath=os.path.join(output_folder, f"sharegpt_{args.max_length}_{args.qps:.2}_qps_thr.png"), tokens=True)
     
-    save_trace(df_scaled2, qps=args.qps, filepath=os.path.join(args.output_folder, f"sharegpt{mistral_suffix}_{args.qps:.2}_qps.json"))
+    save_trace(df_scaled2, qps=args.qps, filepath=os.path.join(output_folder, f"sharegpt_{args.max_length}_{args.qps:.2}_qps.json"))
