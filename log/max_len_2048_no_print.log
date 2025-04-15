@@ -1,0 +1,696 @@
+CUDA_VISIBLE_DEVICES=0,1,2,3 /workspace/flexllm/benchmarking/coserving/run_8B.sh
+++ set -e
+++ cd /workspace/flexllm/benchmarking/coserving/../../flexflow-serve/build
+++ source ./set_python_envs.sh
++++ BUILD_FOLDER=/workspace/flexllm/flexflow-serve/build
++++ PYTHON_FOLDER=/workspace/flexllm/flexflow-serve/python
+++++ /workspace/flexllm/flexflow-serve/python/flexflow/findpylib.py
++++ PYLIB_PATH=/opt/conda/lib/libpython3.12.so.1.0
+++++ dirname /opt/conda/lib/libpython3.12.so.1.0
++++ PYLIB_DIR=/opt/conda/lib
++++ export LD_LIBRARY_PATH=/workspace/flexllm/flexflow-serve/build:/workspace/flexllm/flexflow-serve/build/deps/legion/lib:/opt/conda/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
++++ LD_LIBRARY_PATH=/workspace/flexllm/flexflow-serve/build:/workspace/flexllm/flexflow-serve/build/deps/legion/lib:/opt/conda/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
++++ export PYTHONPATH=/workspace/flexllm/flexflow-serve/python:/workspace/flexllm/flexflow-serve/build/deps/legion/bindings/python:
++++ PYTHONPATH=/workspace/flexllm/flexflow-serve/python:/workspace/flexllm/flexflow-serve/build/deps/legion/bindings/python:
+++ MODEL_NAME=meta-llama/Llama-3.1-8B-Instruct
+++ PEFT_MODEL_NAME=meta-llama/Llama-3.1-8B-Instruct-lora
+++ TP_DEGREE=4
+++ ZSIZE=40000
+++ TRACES=(sharegpt)
+++ QPS_vals=(5.0)
+++ NUM_BWD_LAYER_VALUES=(1 4 16)
+++ NGPUS=4
+++ NCPUS=16
+++ FSIZE=35000
+++ CSIZE=2048
+++ MAX_SEQ_LEN=2048
+++ NUM_KV_CACHE_SLOTS=90000
+++ BATCH_SIZE=256
+++ MAX_TOKENS_PER_BATCH=256
+++ MAX_TRAINING_EPOCHS=1000
+++ GRADIENT_ACCUMULATION_STEPS=8
+++ FT_LOGGING_STEPS=100
+++ OUTPUT_FOLDER=../../benchmarking/output/coserving/flexllm/8B
+++ TRACES_FOLDER=../../benchmarking/traces/burstgpt/8B
+++ FINETUNING_DATASET=t1
+++ FINETUNING_DATASET_FILE=../../benchmarking/traces/burstgpt/8B/../../t1.json
+++ mkdir -p ../../benchmarking/output/coserving/flexllm/8B/output
+++ mkdir -p ../../benchmarking/output/coserving/flexllm/8B/logs
+++ mkdir -p ../../benchmarking/output/coserving/flexllm/8B/profiling
+++ export LEGION_BACKTRACE=1
+++ LEGION_BACKTRACE=1
+++ for trace in "${TRACES[@]}"
+++ for qps in "${QPS_vals[@]}"
+++ for num_bwd_layers in "${NUM_BWD_LAYER_VALUES[@]}"
+++ TRACE_FILE=../../benchmarking/traces/burstgpt/8B/sharegpt_2048_5.0_qps.json
+++ OUTPUT_FILE=../../benchmarking/output/coserving/flexllm/8B/output/meta-llama_Llama-3.1-8B-Instruct_sharegpt_bz_256_tokens_per_batch_256_kv_cache_slots_90000_1_bwd_layers.json
+++ rm ../../benchmarking/output/coserving/flexllm/8B/output/meta-llama_Llama-3.1-8B-Instruct_sharegpt_bz_256_tokens_per_batch_256_kv_cache_slots_90000_1_bwd_layers.json
+++ echo 'Running meta-llama/Llama-3.1-8B-Instruct (tp=4) on sharegpt with BZ=256, TOKENS_PER_BATCH=256, KV_CACHE_SLOTS=90000, NUM_BWD_LAYERS=1'
+Running meta-llama/Llama-3.1-8B-Instruct (tp=4) on sharegpt with BZ=256, TOKENS_PER_BATCH=256, KV_CACHE_SLOTS=90000, NUM_BWD_LAYERS=1
+++ ./inference/flexllm/peft_train -ll:cpu 16 -ll:gpu 4 -ll:util 16 -ll:fsize 35000 -ll:zsize 40000 -ll:csize 2048 -llm-model meta-llama/Llama-3.1-8B-Instruct --fusion -tensor-parallelism-degree 4 -prompt ../../benchmarking/traces/burstgpt/8B/sharegpt_2048_5.0_qps.json -enable-peft -peft-model meta-llama/Llama-3.1-8B-Instruct-lora -finetuning-dataset ../../benchmarking/traces/burstgpt/8B/../../t1.json --max-training-epochs 1000 --gradient-accumulation-steps 8 --num-layers-per-finetuning-step 1 --num-logging-steps 100 -output-file ../../benchmarking/output/coserving/flexllm/8B/output/meta-llama_Llama-3.1-8B-Instruct_sharegpt_bz_256_tokens_per_batch_256_kv_cache_slots_90000_1_bwd_layers.json -profiling-folder ../../benchmarking/output/coserving/flexllm/8B/profiling --max-requests-per-batch 256 --max-tokens-per-batch 256 --max-sequence-length 2048 --num-kv-cache-slots 90000 --ignore-eos --warmup
+/bin/bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+[0 - 7d1f96fb7000]    0.077204 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077274 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077315 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077336 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077356 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077375 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077395 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077414 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077432 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077451 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077470 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077489 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077506 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077527 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077546 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077565 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077583 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077613 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077636 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f96fb7000]    0.077655 {3}{Mapper}: Enabled Control Replication Optimizations.
+[0 - 7d1f8fac0000]    0.101905 {4}{runtime}: [warning 1119] LEGION WARNING: Mapper FlexFlow Mapper requested to replicate task top_level (UID 2) but only reqeuested one shard to be made. Since one shard does not actually constitute replication, Legion is ignoring this request and the task will be mapped like normal. If the mapper intended to not perform replication it should return an empty vector of target processors for 'replicate_task'. (from file /workspace/flexllm/flexflow-serve/deps/legion/runtime/legion/legion_tasks.cc:3749)
+For more information see:
+http://legion.stanford.edu/messages/warning_code.html#warning_code_1119
+
+workSpaceSize (128 MB)
+workSpaceSize (128 MB)
+workSpaceSize (128 MB)
+workSpaceSize (128 MB)
+page manager singleton is initialized with 1407 pages
+LLAMA Config:
+        num_hidden_layers: 32
+        vocab_size: 128256
+        num_attention_heads: 32
+        num_key_value_heads: 8
+        hidden_size: 4096
+        head_dim: 128
+        rms_norm_eps: 1e-05
+        intermediate_size: 14336
+        rotary_embedding_meta: RotaryEmbeddingMeta {
+  apply_rotary_embedding: true,
+  rope_theta: 500000,
+  rope_type: "default",
+  factor: 8,
+  low_freq_factor: 1,
+  high_freq_factor: 4,
+  original_max_position_embeddings: 8192
+}
+        max_beam_width: 3
+        max_beam_depth: 8
+Creating llama model with ff.config.enable_peft_finetuning=true
+Adding argmax layer
+Adding layer layers.0.mlp.down_proj.lora
+Adding layer layers.1.mlp.down_proj.lora
+Adding layer layers.2.mlp.down_proj.lora
+Adding layer layers.3.mlp.down_proj.lora
+Adding layer layers.4.mlp.down_proj.lora
+Adding layer layers.5.mlp.down_proj.lora
+Adding layer layers.6.mlp.down_proj.lora
+Adding layer layers.7.mlp.down_proj.lora
+Adding layer layers.8.mlp.down_proj.lora
+Adding layer layers.9.mlp.down_proj.lora
+Adding layer layers.10.mlp.down_proj.lora
+Adding layer layers.11.mlp.down_proj.lora
+Adding layer layers.12.mlp.down_proj.lora
+Adding layer layers.13.mlp.down_proj.lora
+Adding layer layers.14.mlp.down_proj.lora
+Adding layer layers.15.mlp.down_proj.lora
+Adding layer layers.16.mlp.down_proj.lora
+Adding layer layers.17.mlp.down_proj.lora
+Adding layer layers.18.mlp.down_proj.lora
+Adding layer layers.19.mlp.down_proj.lora
+Adding layer layers.20.mlp.down_proj.lora
+Adding layer layers.21.mlp.down_proj.lora
+Adding layer layers.22.mlp.down_proj.lora
+Adding layer layers.23.mlp.down_proj.lora
+Adding layer layers.24.mlp.down_proj.lora
+Adding layer layers.25.mlp.down_proj.lora
+Adding layer layers.26.mlp.down_proj.lora
+Adding layer layers.27.mlp.down_proj.lora
+Adding layer layers.28.mlp.down_proj.lora
+Adding layer layers.29.mlp.down_proj.lora
+Adding layer layers.30.mlp.down_proj.lora
+Adding layer layers.31.mlp.down_proj.lora
+Registering PEFT adapter{"base_model_name_or_path":"meta-llama/llama-3.1-8b-instruct","cache_folder":"/root/.cache/flexflow","init_lora_weights":true,"lora_alpha":16.0,"lora_dropout":0.0,"optimizer_config":{"lr":0.0010000000474974513,"momentum":0.0,"nesterov":false,"type":"SGD","weight_decay":0.0},"peft_model_id":"meta-llama/llama-3.1-8b-instruct-lora","precision":"fp16","rank":16,"target_modules":["down_proj"],"trainable":true}
+Registered PEFT adapter with id: 6000000
+Registered new inf request with guid: 1000000
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000001
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000002
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000003
+        pending_infr_request_queue length: 4
+Registered new inf request with guid: 1000004
+        pending_infr_request_queue length: 5
+Registered new inf request with guid: 1000005
+        pending_infr_request_queue length: 6
+Registered new inf request with guid: 1000006
+        pending_infr_request_queue length: 7
+Registered new inf request with guid: 1000007
+        pending_infr_request_queue length: 8
+Registered new inf request with guid: 1000008
+        pending_infr_request_queue length: 9
+Registered new inf request with guid: 1000009
+        pending_infr_request_queue length: 10
+Creating dataset with benchmarking tokens. Size of dataset: 1
+Registered new PEFT request with guid: 1000010
+Request {
+  req_type: 4002
+  guid: 1000010
+  max_length: 1024
+  max_new_tokens: -1
+  benchmarking_tokens: 1024
+  add_special_tokens: true
+  warmup: true
+  status: 101
+  peft_model_id: 6000000
+  peft_finetuning_info: {
+    status: 201
+    dataset_filepath: 
+    max_samples: -1
+    max_training_epochs: 1000
+    completed_training_steps: 0
+    num_logging_steps: 10
+    dataset_entry_processed_tokens: 0
+    finetuning_losses: []
+    last_processed_bwd_layer: 2147483647
+    gradient_accumulation_steps: 1
+    dataset: 1 entries
+  }
+  initial_len: 0
+  ssm_cache_size: 0
+  llm_cache_size: 0
+}
+
+2025-04-15 05:14:02 - ###PEFT DEBUGGING### Starting background serving task.
+2025-04-15 05:14:02 - ###PEFT DEBUGGING### Updated models' configuration.
+###PEFT DEBUGGING### LLM Model object exists.
+###PEFT DEBUGGING### Model object exists.
+###PEFT DEBUGGING### Model object still exists.
+###PEFT DEBUGGING### Entering compile_inference.
+###PEFT DEBUGGING### Configuration check passed: At least four CPU cores per node.
+###PEFT DEBUGGING### Launching graph optimization task.
+num_nodes = 1 num_gpus_per_node = 4
+optimal_views.size = 456
+views.size() = 456
+###PEFT DEBUGGING### Operators reconstructed from optimized graph.
+###PEFT DEBUGGING### Starting inplace optimizations.
+###PEFT DEBUGGING### Mapping output tensors.
+ndim(1) dims[4 0 0 0]
+ndim(1) dims[1 0 0 0]
+###PEFT DEBUGGING### Setting up NCCL communications.
+###PEFT DEBUGGING### compile_inference completed successfully.
+Applying fusion optimizations during compilation...
+683 operators before fusion...
+232 operators after fusion...
+Loading weight file embed_tokens.weight
+Loading weight file layers.0.mlp.gate_proj.weight
+Loading weight file layers.1.input_layernorm.weight
+Loading weight file layers.0.self_attn.q_proj.weight
+Loading weight file layers.0.mlp.down_proj.weight
+Loading weight file layers.1.self_attn.q_proj.weight
+Loading weight file layers.0.self_attn.o_proj.weight
+Loading weight file layers.0.post_attention_layernorm.weight
+Loading weight file layers.0.mlp.up_proj.weight
+Loading weight file layers.0.input_layernorm.weight
+Loading weight file layers.1.self_attn.o_proj.weight
+Loading weight file layers.1.post_attention_layernorm.weight
+Loading weight file layers.1.mlp.gate_proj.weight
+Loading weight file layers.1.mlp.up_proj.weight
+Loading weight file layers.1.mlp.down_proj.weight
+Loading weight file layers.2.input_layernorm.weight
+Loading weight file layers.2.self_attn.q_proj.weight
+Loading weight file layers.2.post_attention_layernorm.weight
+Loading weight file layers.2.self_attn.o_proj.weight
+Loading weight file layers.2.mlp.gate_proj.weight
+Loading weight file layers.2.mlp.up_proj.weight
+Loading weight file layers.3.self_attn.o_proj.weight
+Loading weight file layers.3.input_layernorm.weight
+Loading weight file layers.2.mlp.down_proj.weight
+Loading weight file layers.3.self_attn.q_proj.weight
+Loading weight file layers.3.post_attention_layernorm.weight
+Loading weight file layers.3.mlp.gate_proj.weight
+Loading weight file layers.3.mlp.up_proj.weight
+Loading weight file layers.3.mlp.down_proj.weight
+Loading weight file layers.4.input_layernorm.weight
+Loading weight file layers.4.post_attention_layernorm.weight
+Loading weight file layers.4.self_attn.q_proj.weight
+Loading weight file layers.4.mlp.gate_proj.weight
+Loading weight file layers.4.mlp.up_proj.weight
+Loading weight file layers.4.mlp.down_proj.weight
+Loading weight file layers.5.input_layernorm.weight
+Loading weight file layers.5.self_attn.q_proj.weight
+Loading weight file layers.5.self_attn.o_proj.weight
+Loading weight file layers.5.post_attention_layernorm.weight
+Loading weight file layers.5.mlp.gate_proj.weight
+Loading weight file layers.0.self_attn.k_proj.weight
+Loading weight file layers.1.self_attn.k_proj.weight
+Loading weight file layers.4.self_attn.o_proj.weight
+Loading weight file layers.5.mlp.down_proj.weight
+Loading weight file layers.2.self_attn.k_proj.weight
+Loading weight file layers.6.input_layernorm.weight
+Loading weight file layers.5.mlp.up_proj.weight
+Loading weight file layers.6.self_attn.q_proj.weight
+Loading weight file layers.6.post_attention_layernorm.weight
+Loading weight file layers.6.self_attn.o_proj.weight
+Loading weight file layers.0.self_attn.v_proj.weight
+Loading weight file layers.1.self_attn.v_proj.weight
+Loading weight file layers.6.mlp.gate_proj.weight
+Loading weight file layers.6.mlp.up_proj.weight
+Loading weight file layers.2.self_attn.v_proj.weight
+Loading weight file layers.3.self_attn.k_proj.weight
+Loading weight file layers.6.mlp.down_proj.weight
+Loading weight file layers.7.input_layernorm.weight
+Loading weight file layers.7.self_attn.q_proj.weight
+Loading weight file layers.7.self_attn.o_proj.weight
+Loading weight file layers.7.post_attention_layernorm.weight
+Loading weight file layers.7.mlp.up_proj.weight
+Loading weight file layers.3.self_attn.v_proj.weight
+Loading weight file layers.7.mlp.gate_proj.weight
+Loading weight file layers.7.mlp.down_proj.weight
+Loading weight file layers.8.self_attn.q_proj.weight
+Loading weight file layers.8.input_layernorm.weight
+Loading weight file layers.8.self_attn.o_proj.weight
+Loading weight file layers.8.post_attention_layernorm.weight
+Loading weight file layers.8.mlp.gate_proj.weight
+Loading weight file layers.4.self_attn.k_proj.weight
+Loading weight file layers.8.mlp.up_proj.weight
+Loading weight file layers.9.input_layernorm.weight
+Loading weight file layers.5.self_attn.k_proj.weight
+Loading weight file layers.8.mlp.down_proj.weight
+Loading weight file layers.9.self_attn.q_proj.weight
+Loading weight file layers.9.self_attn.o_proj.weight
+Loading weight file layers.9.post_attention_layernorm.weight
+Loading weight file layers.9.mlp.gate_proj.weight
+Loading weight file layers.4.self_attn.v_proj.weight
+Loading weight file layers.9.mlp.down_proj.weight
+Loading weight file layers.9.mlp.up_proj.weight
+Loading weight file layers.5.self_attn.v_proj.weight
+Loading weight file layers.10.input_layernorm.weight
+Loading weight file layers.10.self_attn.q_proj.weight
+Loading weight file layers.10.self_attn.o_proj.weight
+Loading weight file layers.6.self_attn.k_proj.weight
+Loading weight file layers.10.mlp.gate_proj.weight
+Loading weight file layers.10.post_attention_layernorm.weight
+Loading weight file layers.10.mlp.up_proj.weight
+Loading weight file layers.11.input_layernorm.weight
+Loading weight file layers.10.mlp.down_proj.weight
+Loading weight file layers.11.self_attn.q_proj.weight
+Loading weight file layers.11.self_attn.o_proj.weight
+Loading weight file layers.11.mlp.gate_proj.weight
+Loading weight file layers.11.post_attention_layernorm.weight
+Loading weight file layers.7.self_attn.k_proj.weight
+Loading weight file layers.11.mlp.up_proj.weight
+Loading weight file layers.6.self_attn.v_proj.weight
+Loading weight file layers.11.mlp.down_proj.weight
+Loading weight file layers.12.input_layernorm.weight
+Loading weight file layers.12.self_attn.q_proj.weight
+Loading weight file layers.8.self_attn.k_proj.weight
+Loading weight file layers.12.self_attn.o_proj.weight
+Loading weight file layers.7.self_attn.v_proj.weight
+Loading weight file layers.12.mlp.gate_proj.weight
+Loading weight file layers.12.post_attention_layernorm.weight
+Loading weight file layers.12.mlp.up_proj.weight
+Loading weight file layers.12.mlp.down_proj.weight
+Loading weight file layers.13.input_layernorm.weight
+Loading weight file layers.13.self_attn.q_proj.weight
+Loading weight file layers.8.self_attn.v_proj.weight
+Loading weight file layers.9.self_attn.k_proj.weight
+Loading weight file layers.13.self_attn.o_proj.weight
+Loading weight file layers.13.post_attention_layernorm.weight
+Loading weight file layers.13.mlp.gate_proj.weight
+Loading weight file layers.13.mlp.up_proj.weight
+Loading weight file layers.13.mlp.down_proj.weight
+Loading weight file layers.14.input_layernorm.weight
+Loading weight file layers.14.self_attn.q_proj.weight
+Loading weight file layers.14.self_attn.o_proj.weight
+Loading weight file layers.14.post_attention_layernorm.weight
+Loading weight file layers.9.self_attn.v_proj.weight
+Loading weight file layers.14.mlp.gate_proj.weight
+Loading weight file layers.10.self_attn.k_proj.weight
+Loading weight file layers.14.mlp.down_proj.weight
+Loading weight file layers.14.mlp.up_proj.weight
+Loading weight file layers.15.input_layernorm.weight
+Loading weight file layers.15.self_attn.o_proj.weight
+Loading weight file layers.15.self_attn.q_proj.weight
+Loading weight file layers.15.post_attention_layernorm.weight
+Loading weight file layers.11.self_attn.k_proj.weight
+Loading weight file layers.15.mlp.gate_proj.weight
+Loading weight file layers.10.self_attn.v_proj.weight
+Loading weight file layers.15.mlp.up_proj.weight
+Loading weight file layers.15.mlp.down_proj.weight
+Loading weight file layers.16.input_layernorm.weight
+Loading weight file layers.16.self_attn.q_proj.weight
+Loading weight file layers.16.self_attn.o_proj.weight
+Loading weight file layers.12.self_attn.k_proj.weight
+Loading weight file layers.11.self_attn.v_proj.weight
+Loading weight file layers.16.post_attention_layernorm.weight
+Loading weight file layers.16.mlp.gate_proj.weight
+Loading weight file layers.16.mlp.up_proj.weight
+Loading weight file layers.17.input_layernorm.weight
+Loading weight file layers.16.mlp.down_proj.weight
+Loading weight file layers.12.self_attn.v_proj.weight
+Loading weight file layers.13.self_attn.k_proj.weight
+Loading weight file layers.17.self_attn.q_proj.weight
+Loading weight file layers.17.self_attn.o_proj.weight
+Loading weight file layers.17.post_attention_layernorm.weight
+Loading weight file layers.17.mlp.gate_proj.weight
+Loading weight file layers.17.mlp.up_proj.weight
+Loading weight file layers.18.input_layernorm.weight
+Loading weight file layers.17.mlp.down_proj.weight
+Loading weight file layers.13.self_attn.v_proj.weight
+Loading weight file layers.18.post_attention_layernorm.weight
+Loading weight file layers.14.self_attn.k_proj.weight
+Loading weight file layers.18.self_attn.q_proj.weight
+Loading weight file layers.18.self_attn.o_proj.weight
+Loading weight file layers.18.mlp.gate_proj.weight
+Loading weight file layers.14.self_attn.v_proj.weight
+Loading weight file layers.18.mlp.up_proj.weight
+Loading weight file layers.19.input_layernorm.weight
+Loading weight file layers.15.self_attn.k_proj.weight
+Loading weight file layers.18.mlp.down_proj.weight
+Loading weight file layers.19.self_attn.q_proj.weight
+Loading weight file layers.19.post_attention_layernorm.weight
+Loading weight file layers.19.self_attn.o_proj.weight
+Loading weight file layers.19.mlp.up_proj.weight
+Loading weight file layers.19.mlp.down_proj.weight
+Loading weight file layers.16.self_attn.k_proj.weight
+Loading weight file layers.15.self_attn.v_proj.weight
+Loading weight file layers.20.input_layernorm.weight
+Loading weight file layers.19.mlp.gate_proj.weight
+Loading weight file layers.20.post_attention_layernorm.weight
+Loading weight file layers.20.self_attn.q_proj.weight
+Loading weight file layers.20.self_attn.o_proj.weight
+Loading weight file layers.20.mlp.gate_proj.weight
+Loading weight file layers.20.mlp.up_proj.weight
+Loading weight file layers.16.self_attn.v_proj.weight
+Loading weight file layers.21.input_layernorm.weight
+Loading weight file layers.20.mlp.down_proj.weight
+Loading weight file layers.21.self_attn.o_proj.weight
+Loading weight file layers.17.self_attn.k_proj.weight
+Loading weight file layers.21.self_attn.q_proj.weight
+Loading weight file layers.21.post_attention_layernorm.weight
+Loading weight file layers.21.mlp.gate_proj.weight
+Loading weight file layers.21.mlp.up_proj.weight
+Loading weight file layers.22.input_layernorm.weight
+Loading weight file layers.22.self_attn.q_proj.weight
+Loading weight file layers.22.self_attn.o_proj.weight
+Loading weight file layers.21.mlp.down_proj.weight
+Loading weight file layers.18.self_attn.k_proj.weight
+Loading weight file layers.22.post_attention_layernorm.weight
+Loading weight file layers.17.self_attn.v_proj.weight
+Loading weight file layers.22.mlp.gate_proj.weight
+Loading weight file layers.22.mlp.down_proj.weight
+Loading weight file layers.22.mlp.up_proj.weight
+Loading weight file layers.23.input_layernorm.weight
+Loading weight file layers.23.self_attn.q_proj.weight
+Loading weight file layers.23.self_attn.o_proj.weight
+Loading weight file layers.18.self_attn.v_proj.weight
+Loading weight file layers.19.self_attn.k_proj.weight
+Loading weight file layers.23.post_attention_layernorm.weight
+Loading weight file layers.23.mlp.up_proj.weight
+Loading weight file layers.23.mlp.gate_proj.weight
+Loading weight file layers.23.mlp.down_proj.weight
+Loading weight file layers.24.input_layernorm.weight
+Loading weight file layers.24.self_attn.q_proj.weight
+Loading weight file layers.24.self_attn.o_proj.weight
+Loading weight file layers.24.post_attention_layernorm.weight
+Loading weight file layers.19.self_attn.v_proj.weight
+Loading weight file layers.24.mlp.up_proj.weight
+Loading weight file layers.20.self_attn.k_proj.weight
+Loading weight file layers.24.mlp.gate_proj.weight
+Loading weight file layers.24.mlp.down_proj.weight
+Loading weight file layers.25.input_layernorm.weight
+Loading weight file layers.25.self_attn.q_proj.weight
+Loading weight file layers.25.self_attn.o_proj.weight
+Loading weight file layers.25.post_attention_layernorm.weight
+Loading weight file layers.20.self_attn.v_proj.weight
+Loading weight file layers.25.mlp.gate_proj.weight
+Loading weight file layers.21.self_attn.k_proj.weight
+Loading weight file layers.25.mlp.up_proj.weight
+Loading weight file layers.22.self_attn.k_proj.weight
+Loading weight file layers.25.mlp.down_proj.weight
+Loading weight file layers.26.input_layernorm.weight
+Loading weight file layers.26.self_attn.q_proj.weight
+Loading weight file layers.26.self_attn.o_proj.weight
+Loading weight file layers.26.post_attention_layernorm.weight
+Loading weight file layers.26.mlp.gate_proj.weight
+Loading weight file layers.26.mlp.up_proj.weight
+Loading weight file layers.21.self_attn.v_proj.weight
+Loading weight file layers.22.self_attn.v_proj.weight
+Loading weight file layers.23.self_attn.k_proj.weight
+Loading weight file layers.26.mlp.down_proj.weight
+Loading weight file layers.27.input_layernorm.weight
+Loading weight file layers.27.self_attn.q_proj.weight
+Loading weight file layers.27.self_attn.o_proj.weight
+Loading weight file layers.27.post_attention_layernorm.weight
+Loading weight file layers.27.mlp.gate_proj.weight
+Loading weight file layers.27.mlp.up_proj.weight
+Loading weight file layers.27.mlp.down_proj.weight
+Loading weight file layers.28.input_layernorm.weight
+Loading weight file layers.24.self_attn.k_proj.weight
+Loading weight file layers.28.self_attn.q_proj.weight
+Loading weight file layers.28.self_attn.o_proj.weight
+Loading weight file layers.28.post_attention_layernorm.weight
+Loading weight file layers.28.mlp.down_proj.weight
+Loading weight file layers.23.self_attn.v_proj.weight
+Loading weight file layers.28.mlp.gate_proj.weight
+Loading weight file layers.28.mlp.up_proj.weight
+Loading weight file layers.29.input_layernorm.weight
+Loading weight file layers.29.self_attn.q_proj.weight
+Loading weight file layers.29.self_attn.o_proj.weight
+Loading weight file layers.24.self_attn.v_proj.weight
+Loading weight file layers.25.self_attn.k_proj.weight
+Loading weight file layers.29.post_attention_layernorm.weight
+Loading weight file layers.29.mlp.up_proj.weight
+Loading weight file layers.29.mlp.gate_proj.weight
+Loading weight file layers.29.mlp.down_proj.weight
+Loading weight file layers.30.input_layernorm.weight
+Loading weight file layers.30.self_attn.q_proj.weight
+Loading weight file layers.25.self_attn.v_proj.weight
+Loading weight file layers.30.self_attn.o_proj.weight
+Loading weight file layers.30.post_attention_layernorm.weight
+Loading weight file layers.30.mlp.gate_proj.weight
+Loading weight file layers.30.mlp.down_proj.weight
+Loading weight file layers.26.self_attn.k_proj.weight
+Loading weight file layers.30.mlp.up_proj.weight
+Loading weight file layers.31.input_layernorm.weight
+Loading weight file layers.31.self_attn.q_proj.weight
+Loading weight file layers.31.self_attn.o_proj.weight
+Loading weight file layers.31.post_attention_layernorm.weight
+Loading weight file layers.31.mlp.gate_proj.weight
+Loading weight file layers.31.mlp.up_proj.weight
+Loading weight file layers.26.self_attn.v_proj.weight
+Loading weight file layers.31.mlp.down_proj.weight
+Loading weight file norm.weight
+Loading weight file lm_head.weight
+Loading weight file layers.27.self_attn.k_proj.weight
+Loading weight file layers.28.self_attn.k_proj.weight
+Loading weight file layers.27.self_attn.v_proj.weight
+Loading weight file layers.29.self_attn.k_proj.weight
+Loading weight file layers.28.self_attn.v_proj.weight
+Loading weight file layers.30.self_attn.k_proj.weight
+Loading weight file layers.29.self_attn.v_proj.weight
+Loading weight file layers.31.self_attn.k_proj.weight
+Loading weight file layers.30.self_attn.v_proj.weight
+Loading weight file layers.31.self_attn.v_proj.weight
+[0 - 7d1f55e38000]   15.438260 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.474063 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.509754 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.545226 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.580489 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.615915 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.670628 {3}{RequestManager}: Inference req 1000000 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e79000]   15.670646 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.706018 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.741884 {3}{RequestManager}: Inference req 1000001 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e38000]   15.741902 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.777919 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.812943 {3}{RequestManager}: Inference req 1000002 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e38000]   15.812963 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.848935 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.884215 {3}{RequestManager}: Inference req 1000003 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e38000]   15.884233 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.919951 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   15.956552 {3}{RequestManager}: Inference req 1000004 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e38000]   15.956570 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   15.991587 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.045471 {3}{RequestManager}: Inference req 1000005 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e79000]   16.045483 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.080008 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   16.115713 {3}{RequestManager}: Inference req 1000006 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e38000]   16.115733 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.150468 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.185460 {3}{RequestManager}: Inference req 1000007 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e79000]   16.185471 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.220225 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.255270 {3}{RequestManager}: Inference req 1000008 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e79000]   16.255281 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.291977 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.335769 {3}{RequestManager}: Inference req 1000009 completed. Length: 543 (prompt=513, response=30). Evicted 0 times.
+[0 - 7d1f55e79000]   16.335781 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.342403 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   16.342480 {3}{RequestManager}: [Warmup] guid(1000010) completed_training_steps(0) loss(12.762444) latency(16342475.0)
+Output saved to ../../benchmarking/output/coserving/flexllm/8B/output/meta-llama_Llama-3.1-8B-Instruct_sharegpt_bz_256_tokens_per_batch_256_kv_cache_slots_90000_1_bwd_layers.json
+----------warmup finished--------------
+Finetuning request with dataset ../../benchmarking/traces/burstgpt/8B/../../t1.json
+----------inference started--------------
+Registered new inf request with guid: 1000011
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000012
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000013
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000014
+        pending_infr_request_queue length: 4
+Registered new inf request with guid: 1000015
+        pending_infr_request_queue length: 5
+Registered new inf request with guid: 1000016
+        pending_infr_request_queue length: 6
+Creating dataset from json file: ../../benchmarking/traces/burstgpt/8B/../../t1.json. Size of dataset: 1000. Max samples: -1
+Registered new PEFT request with guid: 1000017
+Request {
+  req_type: 4002
+  guid: 1000017
+  max_length: 2047
+  max_new_tokens: -1
+  benchmarking_tokens: -1
+  add_special_tokens: true
+  warmup: false
+  status: 101
+  peft_model_id: 6000000
+  peft_finetuning_info: {
+    status: 201
+    dataset_filepath: ../../benchmarking/traces/burstgpt/8B/../../t1.json
+    max_samples: -1
+    max_training_epochs: 1000
+    completed_training_steps: 0
+    num_logging_steps: 100
+    dataset_entry_processed_tokens: 0
+    finetuning_losses: []
+    last_processed_bwd_layer: 2147483647
+    gradient_accumulation_steps: 8
+    dataset: 1000 entries
+  }
+  initial_len: 0
+  ssm_cache_size: 0
+  llm_cache_size: 0
+}
+
+[0 - 7d1f55e79000]   21.073981 {3}{RequestManager}: Inference req 1000015 completed. Length: 7 (prompt=2, response=5). Evicted 0 times.
+[0 - 7d1f55e79000]   21.309285 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.345082 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.380378 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.415490 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.451123 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.486057 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.521155 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.555803 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.591247 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.626966 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.671876 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.709025 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.754593 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55df7000]   21.800598 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.845848 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.891080 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   21.936801 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   21.981375 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.026504 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   22.072212 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.135265 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.181246 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e79000]   22.226867 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.272019 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.316815 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.361454 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.405772 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.449989 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.494034 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.538406 {3}{RequestManager}: Completed finetuning epoch 0/1000
+[0 - 7d1f55e38000]   22.582632 {3}{RequestManager}: Completed finetuning epoch 0/1000
+Registered new inf request with guid: 1000018
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000019
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000020
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000021
+        pending_infr_request_queue length: 4
+Registered new inf request with guid: 1000022
+        pending_infr_request_queue length: 5
+Registered new inf request with guid: 1000023
+        pending_infr_request_queue length: 6
+Registered new inf request with guid: 1000024
+        pending_infr_request_queue length: 7
+Registered new inf request with guid: 1000025
+        pending_infr_request_queue length: 8
+Registered new inf request with guid: 1000026
+        pending_infr_request_queue length: 9
+Registered new inf request with guid: 1000027
+        pending_infr_request_queue length: 10
+[0 - 7d1f55e79000]   25.321362 {3}{RequestManager}: Inference req 1000021 completed. Length: 13 (prompt=4, response=9). Evicted 0 times.
+Registered new inf request with guid: 1000028
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000029
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000030
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000031
+        pending_infr_request_queue length: 4
+Registered new inf request with guid: 1000032
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000033
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000034
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000035
+        pending_infr_request_queue length: 4
+[0 - 7d1f55e38000]   27.501844 {3}{RequestManager}: Inference req 1000034 completed. Length: 3 (prompt=2, response=1). Evicted 0 times.
+[0 - 7d1f55e38000]   27.742295 {3}{RequestManager}: Inference req 1000030 completed. Length: 387 (prompt=362, response=25). Evicted 0 times.
+[0 - 7d1f55e38000]   27.934051 {3}{RequestManager}: Inference req 1000035 completed. Length: 876 (prompt=870, response=6). Evicted 0 times.
+[0 - 7d1f55db6000]   28.367405 {3}{RequestManager}: Inference req 1000027 completed. Length: 145 (prompt=74, response=71). Evicted 0 times.
+[0 - 7d1f55e79000]   29.125026 {3}{RequestManager}: Inference req 1000025 completed. Length: 103 (prompt=15, response=88). Evicted 0 times.
+Registered new inf request with guid: 1000036
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000037
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000038
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000039
+        pending_infr_request_queue length: 4
+[0 - 7d1f55e79000]   29.720977 {3}{RequestManager}: Inference req 1000038 completed. Length: 1031 (prompt=1030, response=1). Evicted 0 times.
+[0 - 7d1f55e79000]   30.912657 {3}{RequestManager}: Inference req 1000022 completed. Length: 266 (prompt=141, response=125). Evicted 0 times.
+Registered new inf request with guid: 1000040
+        pending_infr_request_queue length: 1
+Registered new inf request with guid: 1000041
+        pending_infr_request_queue length: 2
+Registered new inf request with guid: 1000042
+        pending_infr_request_queue length: 3
+Registered new inf request with guid: 1000043
+        pending_infr_request_queue length: 4
+[0 - 7d1f55e79000]   32.505525 {3}{RequestManager}: Inference req 1000011 completed. Length: 261 (prompt=13, response=248). Evicted 0 times.
+[0 - 7d1f55e79000]   32.505730 {3}{RequestManager}: Inference req 1000016 completed. Length: 255 (prompt=7, response=248). Evicted 0 times.
+peft_train_unwrapped: /workspace/flexllm/flexflow-serve/src/runtime/request_manager.cc:945: void FlexFlow::RequestManager::process_inf_req_progress(const FlexFlow::BatchConfig&, const FlexFlow::InferenceResult&): Assertion `result.token_ids[i] >= 0' failed.
+Signal 6 received by node 0, process 923739 (thread 7d1f55e79000) - obtaining backtrace
+Signal 6 received by process 923739 (thread 7d1f55e79000) at: stack trace: 14 frames
+  [0] = /usr/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c) [0x7d1f972779fc]
+  [1] = /usr/lib/x86_64-linux-gnu/libc.so.6(raise+0x15) [0x7d1f97223475]
+  [2] = /usr/lib/x86_64-linux-gnu/libc.so.6(abort+0xd2) [0x7d1f972097f2]
+  [3] = /usr/lib/x86_64-linux-gnu/libc.so.6(+0x2871a) [0x7d1f9720971a]
+  [4] = /usr/lib/x86_64-linux-gnu/libc.so.6(__assert_fail+0x45) [0x7d1f9721ae95]
+  [5] = /workspace/flexllm/flexflow-serve/build/libflexflow.so.1(FlexFlow::RequestManager::process_inf_req_progress(FlexFlow::BatchConfig const&, FlexFlow::InferenceResult const&)+0x29a) [0x7d1fe583d49a]
+  [6] = /workspace/flexllm/flexflow-serve/build/libflexflow.so.1(FlexFlow::RequestManager::process_work_from_old_batch(FlexFlow::BatchConfig const&, FlexFlow::InferenceResult const&)+0x127) [0x7d1fe583eba7]
+  [7] = /workspace/flexllm/flexflow-serve/build/libflexflow.so.1(FlexFlow::RequestManager::prepare_next_batch_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*)+0x17d) [0x7d1fe584967d]
+  [8] = /workspace/flexllm/flexflow-serve/build/libflexflow.so.1(void Legion::LegionTaskWrapper::legion_task_wrapper<FlexFlow::BatchConfig, &FlexFlow::RequestManager::prepare_next_batch_task>(void const*, unsigned long, void const*, unsigned long, Realm::Processor)+0x78) [0x7d1fe57ab9a8]
+  [9] = /workspace/flexllm/flexflow-serve/build/deps/legion/lib/librealm.so.1(+0x6aaec0) [0x7d1f97e2aec0]
+  [10] = /workspace/flexllm/flexflow-serve/build/deps/legion/lib/librealm.so.1(+0x6aaf89) [0x7d1f97e2af89]
+  [11] = /workspace/flexllm/flexflow-serve/build/deps/legion/lib/librealm.so.1(+0x6a9408) [0x7d1f97e29408]
+  [12] = /workspace/flexllm/flexflow-serve/build/deps/legion/lib/librealm.so.1(+0x6b01ad) [0x7d1f97e301ad]
+  [13] = /usr/lib/x86_64-linux-gnu/libc.so.6(+0x5a12f) [0x7d1f9723b12f]
+
+real    1m14.921s
+user    1m35.958s
+sys     1m8.747s

@@ -229,7 +229,7 @@ def save_trace(trace: Trace, output_path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build WildChat trace")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-70B-Instruct", help="Model name")
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.1-8B-Instruct", help="Model name")
     parser.add_argument("-m", "--max-length", type=int, default=8192, help="Maximum prompt + response length")
     parser.add_argument("-n", "--num_entries", type=int, default=1000, help="Number of entries")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")

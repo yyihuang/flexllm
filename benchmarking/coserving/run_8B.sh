@@ -7,16 +7,16 @@ source ./set_python_envs.sh
 
 MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
 PEFT_MODEL_NAME="${MODEL_NAME}-lora"
-TP_DEGREE=1
+TP_DEGREE=4
 ZSIZE=40000
 TRACES=(
   sharegpt
   # wildchat
 )
 QPS_vals=(
-  1.0
-  2.0
-  3.5
+  # 1.0
+  # 2.0
+  # 3.5
   5.0
 )
 NUM_BWD_LAYER_VALUES=(
@@ -26,9 +26,9 @@ NUM_BWD_LAYER_VALUES=(
 )
 NGPUS=$TP_DEGREE
 NCPUS=16
-FSIZE=77000
+FSIZE=35000
 CSIZE=2048
-MAX_SEQ_LEN=8192
+MAX_SEQ_LEN=2048
 NUM_KV_CACHE_SLOTS=90000
 BATCH_SIZE=256
 MAX_TOKENS_PER_BATCH=256
@@ -75,7 +75,8 @@ for trace in "${TRACES[@]}"; do
                 --max-tokens-per-batch $MAX_TOKENS_PER_BATCH \
                 --max-sequence-length $MAX_SEQ_LEN \
                 --num-kv-cache-slots $NUM_KV_CACHE_SLOTS \
-                --ignore-eos --warmup
+                --ignore-eos --warmup \
+                # --inference-debugging
         done
     done
 done
