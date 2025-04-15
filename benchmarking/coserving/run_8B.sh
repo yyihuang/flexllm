@@ -1,6 +1,10 @@
 set -x
 set -e
 
+cleanup() {
+    rm -rf ~/.cache/flexflow/debug
+}
+
 # Cd into directory holding this script
 cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 source ./set_python_envs.sh
