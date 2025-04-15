@@ -322,6 +322,8 @@ if __name__ == "__main__":
     model_subfolder = "8B" 
     if "mistral" in args.model_name.lower():
         model_subfolder = "mistral"
+    elif "qwen" in args.model_name.lower() and "instruct" in args.model_name.lower():
+        model_subfolder = "qwen_instruct"
     elif "70b" in args.model_name.lower():
         model_subfolder = "70B"
     output_folder = os.path.join(args.output_folder, model_subfolder)

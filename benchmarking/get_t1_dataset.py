@@ -17,7 +17,7 @@ def plot_histogram(data, title, cutoff_x, filename):
 def plot_and_print_stats(dataset, output_folder, max_length, dataset_title="T1 Original distribution"):
     # Plot distribution and calculate percentages for specific thresholds
     plot_histogram(dataset["token_count"], dataset_title, max_length, os.path.join(output_folder, f"{dataset_title.lower().replace(' ', '_')}.png"))
-    thresholds = [1024, 2048, 4096, 8192, 16384]
+    thresholds = [1024, 2048, 4096, 8000, 8192, 16384]
     print("\nPercentage of examples below token thresholds:")
     for threshold in thresholds:
         count_below = sum(1 for count in dataset["token_count"] if count < threshold)
@@ -42,6 +42,8 @@ def main(model_name, num_entries, max_length, seed, output_folder):
         example["token_count"] = len(tokens)
         return example
     tokenized_dataset = dataset.map(apply_template_and_count_tokens)
+    avg_token_count = sum(tokenized_dataset["token_count"]) / len(tokenized_dataset)
+    print(f"Average token count: {avg_token_count:.2f}")
     
     plot_and_print_stats(tokenized_dataset, output_folder, max_length, "T1 Original distribution")
 
